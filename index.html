@@ -4,40 +4,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>To-Do List</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha384-k6RqeWeci5ZR/Lv4MR0sA0FfDOMzjNyy/J8FJo7xk/5ZtSc8C4d7cx/hZpW04l" crossorigin="anonymous">
     <style>
         body {
-            background-color: #121212;
-            color: white;
-            font-family: Arial, sans-serif;
             margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh; /* Full height of the viewport */
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            color: white;
+            background: url('image.png') no-repeat center center fixed;
+            background-size: cover;
+            position: relative;
+            overflow: hidden;
+        }
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5); /* Black with 50% opacity */
+            backdrop-filter: blur(5px); /* Slight blur effect */
+            z-index: 1; /* Make sure the overlay is above the background */
         }
         .container {
             text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background-color: #1e1e1e; /* Slightly lighter background for contrast */
+            background-color: rgba(30, 30, 30, 0.9); /* Semi-transparent container */
             padding: 20px;
-            border-radius: 8px; /* Rounded corners */
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); /* Shadow for depth */
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 500px;
+            position: relative; /* To position the item counter */
+            z-index: 2; /* Above the overlay */
         }
         h1 {
-            margin-bottom: 20px; /* Spacing below the title */
+            margin-bottom: 20px;
+        }
+        .list-container {
+            width: 100%;
+            text-align: left;
         }
         #todoList {
-            list-style-type: none;
             padding: 0;
+            margin-left: 60px;
+            width: 100%;
         }
         li {
             margin: 10px 0;
             display: flex;
-            align-items: left;
-            justify-content: left; /* Center items in the list */
+            align-items: center;
         }
         input[type="checkbox"] {
             appearance: none;
@@ -61,44 +79,73 @@
             color: white;
             font-size: 24px;
             width: 100%;
-            padding: 10px; /* Added padding for better UX */
+            padding: 10px;
         }
         .new-task {
-    display: block;
-    text-align: center;
-    margin-bottom: 20px;
-    border: none;
-    background: transparent;
-    color: transparent; /* Make text transparent */
-    font-size: 18px;
-    width: 80%; /* Adjust width to be shorter */
-    padding: 10px; /* Added padding for better UX */
-    border-bottom: 1px solid white; /* Add underline */
-}
-
+            color: transparent;
+            font-size: 18px;
+            width: 80%;
+            padding: 10px;
+            border-bottom: 1px solid white;
+        }
         .new-task:focus {
-            outline: none; /* Remove default outline on focus */
-            color: white; /* Change text color back when focused */
+            outline: none;
+            color: white;
+        }
+        .icon-container {
+            display: flex;
+            justify-content: flex-start;
+            margin-bottom: 10px; /* Spacing below the icons */
+            width: 100%;
+        }
+        .icon {
+            cursor: pointer;
+            padding: 0 10px; /* Space between icons */
+            transition: color 0.3s;
+            font-size: 24px; /* Increased font size for icons */
+        }
+        .icon:hover {
+            color: #FFD700; /* Gold color on hover */
+        }
+        .item-counter {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(30, 30, 30, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
+    <div class="overlay"></div> <!-- Overlay for black opacity and blur -->
     <div class="container">
+        <div class="icon-container">
+            <span class="icon" title="Edit">&#9998;</span> <!-- Edit icon -->
+            <span class="icon" title="Share" id="shareIcon">&#x1F5A8;</span> <!-- Share icon -->
+            <span class="icon" title="Star">&#9733;</span> <!-- Star icon -->
+        </div>
         <input type="text" class="edit-title" id="listTitle" placeholder="Edit List Title" value="My To-Do List" />
         <input type="text" class="new-task" id="newTask" />
-        <ul id="todoList">
-            <!-- Initial tasks can be added here if needed -->
-        </ul>
+        <div class="list-container">
+            <ul id="todoList">
+                <!-- Initial tasks can be added here if needed -->
+            </ul>
+        </div>
+        <div class="item-counter" id="itemCounter">Items: 0</div>
     </div>
 
     <script>
         const listTitleInput = document.getElementById('listTitle');
         const newTaskInput = document.getElementById('newTask');
         const todoList = document.getElementById('todoList');
+        const itemCounter = document.getElementById('itemCounter');
+        const shareIcon = document.getElementById('shareIcon');
 
         listTitleInput.addEventListener('input', function() {
             const title = this.value || "My To-Do List";
-            document.title = title; // Optional: Update the document title as well
+            document.title = title;
         });
 
         newTaskInput.addEventListener('keypress', function(event) {
@@ -108,10 +155,22 @@
                     const li = document.createElement('li');
                     li.innerHTML = `<input type="checkbox"> ${taskText}`;
                     todoList.appendChild(li);
-                    this.value = ''; // Clear the input field
+                    this.value = '';
+                    updateItemCount();
                 }
             }
         });
+
+        shareIcon.addEventListener('click', function() {
+            // Example share functionality
+            alert('Share this To-Do list!');
+            // You can add more functionality here, like sharing via social media
+        });
+
+        function updateItemCount() {
+            const itemCount = todoList.children.length;
+            itemCounter.textContent = `Items: ${itemCount}`;
+        }
     </script>
 </body>
 </html>
